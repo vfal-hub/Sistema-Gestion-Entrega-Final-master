@@ -1,0 +1,92 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using SistemaGestionUI.Components.Layout
+@layout LoginLayout
+@inject HttpClient httpClient
+@using SistemaGestionUI.Extensiones
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider autenticacionProvider
+@inject NavigationManager NavigationManager
+@inject UsuariosService ServiceUsuario
+@inject IJSRuntime JSRuntime
+@using Blazored.SessionStorage
+@inject ISessionStorageService sessionStorageService
+
+<div class="d-flex justify-content-center align-items-center min-vh-100">
+    <div class="row w-100 justify-content-center">
+
+        <div class="mb-3 text-center">
+            <h3>LOGIN</h3>
+        </div>
+
+        <div class="col-lg-4 border">
+          
+            <div class="mb-3">
+                <label for="email">Email</label>
+                <input type="text" id="email" class="form-control" @bind="login.Email" />
+            </div>
+
+            <div class="mb-3">
+                <label for="contraseña">Contraseña</label>
+                <input type="@passwordInputType" id="contraseña" class="form-control" @bind="login.Contraseña" />
+            </div>
+            
+            <div class="mb-3">
+                <input type="checkbox" id="mostrarContraseña" @onchange="TogglePasswordVisibility" />
+                <label for="mostrarContraseña">Mostrar contraseña</label>
+            </div>
+
+            <div class="mb-3">
+                <button @onclick="IniciarSesion" class="btn btn-primary">Login</button>
+            </div>
+
+            @if (loginError)
+            {
+                <div class="mb-3" style="color: red;">
+                    Usuario incorrecto, verifique los datos ingresados.
+                </div>
+            }
+
+            <div class="mb-3">
+                <label>No tienes cuenta?   </label>
+                <a href="/Register">Registrate aca!</a>                                
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private LoginDTO login = new LoginDTO();
+    private bool loginError = false;
+    private bool showPassword = false;
+
+    private string passwordInputType => showPassword ? "text" : "password";
+
+    private void TogglePasswordVisibility(ChangeEventArgs e)
+    {
+        showPassword = (bool)e.Value;
+    }
+
+
+    private async Task IniciarSesion()
+    {        
+
+        loginError = false;
+        var loginResponse = await httpClient.PostAsJsonAsync<LoginDTO>("http://localhost:5176/api/Autenticacion/Autenticar", login);
+        if (loginResponse.IsSuccessStatusCode)
+        {
+            await sessionStorageService.SetItemAsync("loginDTO", login);
+
+            NavigationManager.NavigateTo("/Home");
+            
+        }
+        else if (loginResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            loginError = true;
+        }
+
+    }
+
+}

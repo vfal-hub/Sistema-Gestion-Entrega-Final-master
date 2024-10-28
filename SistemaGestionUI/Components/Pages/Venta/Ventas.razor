@@ -1,0 +1,85 @@
+﻿@page "/ventas"
+@inject VentasService service
+@inject UsuariosService usuariosService
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize]
+
+<h3>Ventas</h3>
+
+<div class="container">
+    <div class="row">
+        <div class="col-6">
+            <a href="/venta/new">
+                <button type="button" class="btn btn-success">Crear</button>
+            </a>
+        </div>
+    </div>
+    <div class="row">
+        <table class="table table-dark table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Id</th>
+                    <th>Comentarios</th>
+                    <th>Id Usuario</th>
+                    <th>NombreUsuario</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (Venta venta in ventas)
+                {
+                    <tr>
+                        <td>@venta.Id</td>
+                        <td>@venta.Comentarios</td>
+                        <td>@venta.UsuarioId</td>
+                        <td>@(usuariosNombres.ContainsKey(venta.UsuarioId) ? usuariosNombres[venta.UsuarioId] : "Cargando...")</td>
+                        <td>
+                            <a href="/venta/@venta.Id/Editar">Editar</a>
+                        </td>
+                        <td>
+                            <button @onclick="@(() => EliminarVenta(venta.Id))" class="btn btn-danger">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+@code {
+    private List<Venta> ventas = new List<Venta>();
+    private Dictionary<int, string> usuariosNombres = new Dictionary<int, string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ventas = await service.ListarVentas();
+
+        // Obtener el nombre de cada usuario asociado a una venta
+        foreach (var venta in ventas)
+        {
+            if (!usuariosNombres.ContainsKey(venta.UsuarioId))
+            {
+                var nombreUsuario = await usuariosService.GetUserNameById(venta.UsuarioId);
+                if (nombreUsuario != null)
+                {
+                    usuariosNombres[venta.UsuarioId] = nombreUsuario;
+                }
+                else
+                {
+                    usuariosNombres[venta.UsuarioId] = "Usuario no encontrado";
+                }
+            }
+        }
+    }
+
+    public async Task EliminarVenta(int id)
+    {
+        await service.EliminarVenta(id);
+        ventas = await service.ListarVentas();
+    }
+}

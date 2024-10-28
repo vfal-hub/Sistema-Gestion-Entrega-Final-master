@@ -1,0 +1,114 @@
+﻿@page "/productos"
+@inject ProductosService Service
+@inject ProductosVendidosService ProductosVendidosService
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization;
+@attribute [Authorize]
+
+<h3>Productos</h3>
+
+<div class="container">
+    <div class="row">
+        <div class="col-6">
+            <div class="row">
+                <div class=col-6>
+                    <a href="/productos/new">
+                        <button class="btn btn-success">
+                            Nuevo Producto
+                        </button>
+                    </a>
+                </div>
+                <div class=col-6>
+                    <button class="btn btn-primary" @onclick="ActualizarTotal">
+                        Calcular Total
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" placeholder="Filtrar por..." @bind="filtro" />
+                <button type="button" class="btn btn-outline-secondary" @onclick="Buscar">Buscar</button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <table class="table table-dark table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Id</th>
+                    <th>Descripcion</th>
+                    <th>Costo</th>
+                    <th>PrecioVenta</th>
+                    <th>Stock</th>
+                    <th>Total</th>
+                    <th>Categoria</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (Producto producto in productos)
+                {
+                    <tr>
+                        <td>@producto.Id</td>
+                        <td>@producto.Descripcion</td>
+                        <td>@producto.PrecioCompra</td>
+                        <td>@producto.PrecioVenta</td>
+                        <td>@producto.Stock</td>
+                        <td>@producto.TotalProducto</td>
+                        <td>@producto.Categoria</td>
+                        <td>
+                            <a href="/productos/@producto.Id/Editar">Editar</a>
+                        </td>
+                        <td>
+                            <button @onclick="@(() => EliminarProducto(producto.Id))" class="btn btn-danger">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+
+@code {
+    private List<Producto> productos = [];
+    public List<ProductosVendidos> productosVendidos = new List<ProductosVendidos>();
+
+    private string filtro = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        productos = await Service.ListProducts();
+    }
+
+    public async Task EliminarProducto(int id)
+    {
+        // Recorro para eliminar los producots vendidos con mismo Id    
+        var productosLista = await ProductosVendidosService.ListarProductosVendidos();
+        var productosVendidos = productosLista.Where(pv => pv.IdProducto == id).ToList();
+
+        foreach (var productov in productosVendidos)
+        {
+            var productoId = productov.Id;
+            await ProductosVendidosService.EliminarProductoVendido(productoId);
+
+        }
+
+        //Elimino el producto
+        await Service.DeleteProduct(id);
+        productos = await Service.ListProducts();        
+    }
+
+    public async Task Buscar() => productos = await Service.GetProductBy(filtro);
+
+    private async Task ActualizarTotal(MouseEventArgs e)
+    {
+        await Service.UpdateTotalProducts();
+        productos = await Service.ListProducts();
+    }
+}

@@ -1,0 +1,51 @@
+﻿@page "/Home"
+
+@using Blazored.SessionStorage
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization;
+@attribute [Authorize]
+@inject UsuariosService UsuariosService
+@inject ISessionStorageService sessionStorageService
+
+
+<PageTitle>PROYECTO FINAL - CURSO C# - CODERHOUSE</PageTitle>
+
+
+<div class="row" style="text-align:center">
+    <h1>SISTEMA GESTION</h1>
+</div>
+
+
+<div style="text-align:center">
+    <img src="images/sistema.jpg" alt="Sistema" style="max-width:800px;" />
+</div>
+
+<div style="text-align:center">
+    <h2>Bienvenido @nombreUsuario</h2>
+</div>
+
+<div style="text-align:center">
+    <h4>Copyright - Gaston Tejada 2024.-</h4>
+</div>
+
+@code {
+    private string nombreUsuario = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var loginDTO = await sessionStorageService.GetItemAsync<LoginDTO>("loginDTO");
+     
+        if (loginDTO != null)
+        {
+
+            var usuario = await UsuariosService.GetUserName(loginDTO);
+            nombreUsuario = usuario ?? "No se encontró el nombre del usuario.";
+            
+        }
+        else
+        {
+            nombreUsuario = "No se encontró el usuario en sesión.";
+        }
+        
+    }
+}

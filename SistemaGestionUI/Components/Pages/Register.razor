@@ -1,0 +1,123 @@
+﻿@page "/Register"
+@rendermode InteractiveServer
+@using SistemaGestionUI.Components.Layout
+@layout LoginLayout
+@inject HttpClient httpClient
+@using SistemaGestionUI.Extensiones
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider autenticacionProvider
+@inject NavigationManager NavigationManager
+@inject UsuariosService ServiceUsuario
+@inject IJSRuntime JSRuntime
+
+
+<div class="d-flex justify-content-center align-items-center min-vh-100">
+
+    <div class="row w-100 justify-content-center">
+
+        <div class="row mt-5">
+
+            <div class="mb-3 text-center">
+                <h3>Registro</h3>
+            </div>
+
+            <div class="col-lg-4 offset-lg-4 border">
+
+                <div class="mb-3">
+                    <label for="nombre">Nombre</label>
+                    <input type="text" id="nombre" class="form-control" @bind="nombre" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="apellido">Apellido</label>
+                    <input type="text" id="apellido" class="form-control" @bind="apellido" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="nombreUsuario">Nombre Usuario</label>
+                    <input type="text" id="nombreUsuario" class="form-control" @bind="nombreUsuario" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="email">Email</label>
+                    <input type="text" id="email" class="form-control" @bind="email" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="contraseña">Contraseña</label>
+                    <input type="password" id="contraseña" class="form-control" @bind="contraseña" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="confirm-contraseña">Confirmar Contraseña</label>
+                    <input type="password" id="confirm-contraseña" class="form-control" @bind="confirmarContraseña" />
+                </div>
+
+                <div class="mb-3">
+                    @if (!string.IsNullOrEmpty(mensajeError))
+                    {
+                        <div class="alert alert-danger">@mensajeError</div>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <button class="btn btn-primary" @onclick="RegistrarUsuario">Registrarse</button>
+                </div>
+
+                <div class="mb-3">
+                    <label>¿Ya tienes cuenta?     </label>
+                    <a href="/">Ingresa aquí!</a>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    private string? nombre;
+    private string? apellido;
+    private string? nombreUsuario;
+    private string? email;
+    private string? contraseña;
+    private string? confirmarContraseña;
+    private string? mensajeError;
+
+    private async Task RegistrarUsuario()
+    {
+        mensajeError = string.Empty;
+
+        if (contraseña != confirmarContraseña)
+        {
+            mensajeError = "Las contraseñas no coinciden.";
+            return;
+        }
+
+        var nuevoUsuario = new Usuario()
+            {
+                Nombre        = nombre,
+                Apellido      = apellido,
+                NombreUsuario = nombreUsuario,
+                Email         = email,
+                Contraseña    = contraseña
+            };
+
+        Usuario newUser = await ServiceUsuario.CreateUser(nuevoUsuario);
+        int userId = newUser.Id;
+
+
+        if (userId > 0)
+        {            
+            await JSRuntime.InvokeVoidAsync("alert", "El usuario se registró correctamente. Por favor, loguéese.");
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            mensajeError = "Ocurrió un error al registrar el usuario.";
+        }
+    }
+}
+

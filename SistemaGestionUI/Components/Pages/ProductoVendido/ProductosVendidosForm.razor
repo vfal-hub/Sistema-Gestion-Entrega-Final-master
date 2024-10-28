@@ -1,0 +1,85 @@
+﻿@inject NavigationManager NavigationManager
+@inject ProductosVendidosService Service
+@inject ProductosService Serviceproductos
+
+<h3>ProductosVendidos</h3>
+
+<EditForm Model="ProductosVendido" OnValidSubmit="CreateOrUpdateProductoVendido" FormName="productosVendidos-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="idProducto">IdProducto</label>
+        <InputNumber type="number" class="form-control" id="idProducto" @bind-Value="ProductosVendido.IdProducto" @onchange="LoadNombreProducto" />
+    </div>
+
+    <div class="form-group">
+        <label for="nombreProducto">Nombre del Producto</label>
+        <InputText type="text" class="form-control" id="nombreProducto" @bind-Value="nombreProducto" readonly />
+    </div>
+
+    <div class="form-group">
+        <label for="cantidad">Cantidad</label>
+        <InputNumber type="number" class="form-control" id="stock" @bind-Value="ProductosVendido.Cantidad" />
+
+    </div>
+    <div class="form-group">
+        <label for="idVenta">IdVenta</label>
+        <InputNumber type="number" class="form-control" id="idVenta" @bind-Value="ProductosVendido.IdVenta" />
+    </div>
+    <div class="form-group mt-4">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-dark ml-2" @onclick="Cancel">Cancelar</button>
+    </div>
+</EditForm>
+
+@code {
+
+    [Parameter]
+    public ProductosVendidos? ProductosVendido { get; set; }
+   
+    private string? nombreProducto;
+    
+     protected override async Task OnParametersSetAsync()
+    {
+        // Si ya existe un producto, cargamos su nombre
+        if (ProductosVendido != null && ProductosVendido.IdProducto > 0)
+        {
+            await LoadNombreProducto();
+        }
+    }
+
+    // Método para cargar el nombre del producto según el IdProducto
+    private async Task LoadNombreProducto()
+    {
+        if (ProductosVendido.IdProducto.HasValue && ProductosVendido.IdProducto.Value > 0)
+        {
+            
+            var producto = await Serviceproductos.GetOneProduct(ProductosVendido.IdProducto.Value);
+            if (producto != null)
+            {
+                nombreProducto = producto.Descripcion;
+                StateHasChanged();
+            }
+        }
+    }
+
+    public async Task CreateOrUpdateProductoVendido()
+    {
+        if (ProductosVendido.Id > 0)
+        {
+            await Service.ModificarProductoVendido(ProductosVendido.Id, ProductosVendido);
+        }
+        else
+        {
+            await Service.CrearProductoVendido(ProductosVendido);
+        }
+
+        NavigationManager.NavigateTo("/productoVendido");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/productoVendido");
+    }
+}

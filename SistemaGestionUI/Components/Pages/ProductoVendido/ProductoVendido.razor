@@ -1,0 +1,72 @@
+﻿@page "/productoVendido"
+@inject ProductosVendidosService Service
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization;
+@attribute [Authorize]
+
+<h3>Productos Vendidos</h3>
+
+<div class="container">
+    <div class="row">
+        <div class="col-6">
+            <a href="/productoVendidos/new">
+                <button type="button" class="btn btn-success">Crear</button>
+            </a>
+        </div>
+    </div>
+    <div class="row">
+        <table class="table table-dark table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Id</th>
+                    <th>IdProducto</th>
+                    <th>Descripcion</th>
+                    <th>Cantidad</th>
+                    <th>IdVenta</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (ProductosVendidos productov in productosv)
+                {                    
+                    <tr>                        
+                        <td>@productov.Id</td>
+                        <td>@productov.IdProducto</td>
+                        <td>@productov.NombreProducto</td>
+                        <td>@productov.Cantidad</td>
+                        <td>@productov.IdVenta</td>
+                        <td>
+                            <a href="/productoVendido/@productov.Id/Editar">Editar</a>
+                        </td>
+                        <td>
+                            <button @onclick="@(() => EliminarProducto(productov.Id))" class="btn btn-danger">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+
+@code {
+
+    private List<ProductosVendidos> productosv = [];    
+        
+    protected override async Task OnInitializedAsync()
+    {       
+        productosv = await Service.ListarProductosVendidos();
+    }
+
+    public async Task EliminarProducto(int id)
+    {        
+        await Service.EliminarProductoVendido(id);
+        productosv = await Service.ListarProductosVendidos();
+    }
+
+}
+

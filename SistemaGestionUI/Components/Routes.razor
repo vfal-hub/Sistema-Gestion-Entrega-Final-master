@@ -1,0 +1,31 @@
+﻿@using Blazored.SessionStorage
+﻿@using SistemaGestionUI.Components
+﻿@using SistemaGestionUI.Extensiones
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager navManager
+@inject IJSRuntime JSRuntime
+@inject ISessionStorageService sessionStorageService
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="typeof(Program).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+             @* <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
+                <NotAuthorized>
+                    @{
+                        if (context.User.Identity?.IsAuthenticated != true)
+                            navManager.NavigateTo("/");
+                    }
+                </NotAuthorized>
+            </AuthorizeRouteView> *@
+
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(Layout.MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+
